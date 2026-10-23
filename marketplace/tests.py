@@ -78,3 +78,29 @@ class MarketplaceSmokeTests(TestCase):
         response = self.client.post(reverse("toggle_saved", kwargs={"slug": prop.slug}))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(SavedProperty.objects.filter(user=user, property=prop).count(), 1)
+
+    def test_login_and_member_dashboard_render(self):
+        login_response = self.client.get(reverse("login"))
+        self.assertEqual(login_response.status_code, 200)
+        user = User.objects.create_user(username="dashboardbuyer", password="StrongPassword!2026")
+        self.client.force_login(user)
+        dashboard_response = self.client.get(reverse("dashboard"))
+        self.assertEqual(dashboard_response.status_code, 200)
+
+    def test_realtor_application_is_pending_until_review(self):
+        user = User.objects.create_user(username="candidate", password="StrongPassword!2026")
+        self.client.force_login(user)
+        response = self.client.post(reverse("realtor_apply"), {
+            "message": "I have local market knowledge and client service experience.",
+            "years_experience": "4",
+            "licence_or_company": "Independent professional",
+        })
+        self.assertEqual(response.status_code, 302)
+        application = user.realtor_applications.get()
+        self.assertEqual(application.status, "pending")
+        self.assertEqual(user.profile.role, "realtor")
+        self.assertFalse(user.profile.is_verified)
+
+    def test_realtor_directory_renders(self):
+        response = self.client.get(reverse("realtors"))
+        self.assertEqual(response.status_code, 200)
