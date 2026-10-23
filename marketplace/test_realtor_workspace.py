@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from .models import Profile, Property, ContactMessage, RealtorApplication
+from .models import Profile, Property, ContactMessage, RealtorApplication, RealtorLead
 
 User = get_user_model()
 
@@ -66,3 +66,20 @@ class RealtorWorkspaceTests(TestCase):
         self.assertEqual(self.client.post(reverse("property_archive", kwargs={"slug": listing.slug})).status_code, 302)
         listing.refresh_from_db()
         self.assertTrue(listing.is_archived)
+
+    def test_public_profile_message_enters_realtor_dashboard(self):
+        response = self.client.post(
+            reverse("realtor_lead_submit", kwargs={"username": self.user.username}),
+            {
+                "name": "Client Inquiry",
+                "email": "client@example.com",
+                "phone": "+2348012345678",
+                "message": "I would like help finding a family home.",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(RealtorLead.objects.filter(realtor=self.user, email="client@example.com").exists())
+        self.client.force_login(self.user)
+        dashboard_response = self.client.get(reverse("dashboard"))
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertContains(dashboard_response, "Client Inquiry")
