@@ -30,3 +30,7 @@ jobs:
         run: python manage.py collectstatic --noinput
       - name: Run application tests
         run: python manage.py test marketplace --verbosity 2
+      - name: Install Ansible for playbook validation
+        run: pip install ansible-core
+      - name: Syntax-check Ansible smoke playbook
+        run: ansible-playbook -i localhost, --syntax-check ansible/verify-deployment.yml
