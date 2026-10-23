@@ -34,3 +34,5 @@ jobs:
         run: pip install ansible-core
       - name: Syntax-check Ansible smoke playbook
         run: ansible-playbook -i localhost, --syntax-check ansible/verify-deployment.yml
+      - name: Build production Docker image
+        run: docker build --tag urbisora-africa:ci .
