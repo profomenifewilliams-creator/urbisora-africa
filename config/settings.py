@@ -5,6 +5,8 @@ from urllib.parse import urlparse, unquote
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "local-unsafe-key-change-in-render")
 DEBUG = os.getenv("DEBUG", "True" if not os.getenv("RENDER") else "False").lower() in {"1", "true", "yes"}
+if not DEBUG and (not os.getenv("SECRET_KEY") or SECRET_KEY == "local-unsafe-key-change-in-render"):
+    raise RuntimeError("A generated, unique SECRET_KEY must be configured for production.")
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", ".onrender.com,localhost,127.0.0.1,testserver").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("CSRF_TRUSTED_ORIGINS", "https://*.onrender.com").split(",") if x.strip()]
 
