@@ -40,4 +40,4 @@ databases:
     user: urbisora_africa_db_user
     plan: free
     region: frankfurt
-    postgresMajorVersion: 16
+    postgresMajorVersion: "16"
