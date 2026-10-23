@@ -2,20 +2,34 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
+
 class Profile(models.Model):
     class Role(models.TextChoices):
         CLIENT = "client", "Client"
         REALTOR = "realtor", "Realtor"
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CLIENT)
+    photo = models.ImageField(upload_to="realtor_profiles/", blank=True)
+    professional_title = models.CharField(max_length=160, default="Real Estate Professional")
+    agency_name = models.CharField(max_length=160, blank=True)
     phone = models.CharField(max_length=40, blank=True)
+    show_phone = models.BooleanField(default=False)
+    show_email = models.BooleanField(default=False)
     city = models.CharField(max_length=80, blank=True)
     bio = models.TextField(blank=True)
+    specialties = models.CharField(max_length=300, blank=True, help_text="Separate specialties with commas.")
+    languages = models.CharField(max_length=200, blank=True, help_text="Languages you can work in.")
+    service_areas = models.CharField(max_length=240, blank=True, help_text="Cities, districts or states you cover.")
+    website = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
     years_experience = models.PositiveSmallIntegerField(default=0)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return f"{self.user.username} ({self.role})"
+
 
 class Property(models.Model):
     class Type(models.TextChoices):
@@ -24,14 +38,17 @@ class Property(models.Model):
         LAND = "land", "Land"
         COMMERCIAL = "commercial", "Commercial"
         SHORT_STAY = "short_stay", "Short stay"
+
     class Purpose(models.TextChoices):
         SALE = "sale", "For sale"
         RENT = "rent", "For rent"
         LEASE = "lease", "For lease"
+
     class Review(models.TextChoices):
         PENDING = "pending", "Pending review"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="properties")
     title = models.CharField(max_length=180)
     slug = models.SlugField(max_length=205, unique=True, blank=True)
@@ -48,10 +65,13 @@ class Property(models.Model):
     image_url = models.URLField(blank=True, help_text="Optional publicly hosted property image URL")
     owner_authorized = models.BooleanField(default=False)
     review_status = models.CharField(max_length=12, choices=Review.choices, default=Review.PENDING)
+    is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     class Meta:
         ordering = ["-created_at"]
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.title)[:180] or "property"
@@ -62,21 +82,32 @@ class Property(models.Model):
                 suffix += 1
             self.slug = candidate
         super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
 
+
 class Enquiry(models.Model):
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        CONTACTED = "contacted", "Contacted"
+        CLOSED = "closed", "Closed"
+
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="enquiries")
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=120)
     email = models.EmailField()
     phone = models.CharField(max_length=40, blank=True)
     message = models.TextField()
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ["-created_at"]
+
     def __str__(self):
         return f"Enquiry for {self.property} by {self.name}"
+
 
 class ViewingRequest(models.Model):
     class Status(models.TextChoices):
@@ -84,6 +115,7 @@ class ViewingRequest(models.Model):
         CONFIRMED = "confirmed", "Confirmed"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
+
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="viewing_requests")
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=120)
@@ -94,23 +126,48 @@ class ViewingRequest(models.Model):
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class SavedProperty(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "property"], name="unique_saved_property")]
+
 
 class RealtorApplication(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending review"
         APPROVED = "approved", "Approved"
         DECLINED = "declined", "Declined"
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="realtor_applications")
     message = models.TextField()
     years_experience = models.PositiveSmallIntegerField(default=0)
     licence_or_company = models.CharField(max_length=160, blank=True)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ["-created_at"]
+
+
+class ContactMessage(models.Model):
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        HANDLED = "handled", "Handled"
+        CLOSED = "closed", "Closed"
+
+    full_name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40, blank=True)
+    message = models.TextField()
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Contact message from {self.full_name}"
