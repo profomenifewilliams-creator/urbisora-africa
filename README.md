@@ -1,34 +1,45 @@
 # Urbisora Africa
-
 **Property. People. Places.**
 
-Django-powered real-estate marketplace with immediate account registration, public property search, authorised listing submissions, enquiry capture, saved properties, realtor applications and an admin moderation area.
+Urbisora Africa is a Django real-estate marketplace for property discovery, realtor profiles and portfolio management, client enquiries, and professional account workspaces.
 
-## Render deployment
+## Member experience
+- Immediate registration and sign-in without SMTP/email activation.
+- Personal dashboard for property listings, saved properties, enquiry follow-up and profile management.
+- CV-style realtor profiles with profile photos, title, agency, summary, specialties, languages, service areas and optional public contact links.
+- Approved realtor profiles showcase their own publicly approved properties.
+- Visitors can send messages from a public realtor profile; these go into that realtor's lead inbox.
+- Listing owners can edit and archive their own properties. Edits return to moderation before republishing.
+- Contact form saves messages to the platform admin inbox; outgoing email notification is not enabled in the no-SMTP release.
 
-This repository includes a Dockerfile and Render Blueprint. Once Render is connected to this private GitHub repository, use **New → Blueprint** in Render and select this repository.
+## Contact
+- Phone: +234 906 791 2928
+- Email: admin@ubisoraafrica.com
+- Address: Guzape, FCT Abuja, Federal Housing Authority (FHA) Road, 219 House 15
+- Developed and powered by Fortitech Digital Cluster.
 
-- Registration is immediate; no SMTP or email activation is required.
-- Health endpoint: `/healthz/`
-- Admin: `/admin/`
-- Property directory: `/properties/`
-- Member dashboard: `/dashboard/`
-- Listings need owner/agent authorisation and staff approval before public publication.
-- The bootstrap command reads `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD`. The Blueprint generates the secret key and initial admin password; read the generated value from Render environment settings and store it privately.
+## Useful routes
+- Homepage: /
+- Property search: /properties/
+- Realtor directory: /realtors/
+- Member dashboard: /dashboard/
+- Profile editor: /profile/edit/
+- Contact: /contact/
+- Admin: /admin/
+- Health check: /healthz/
 
-## Initial free-tier limitations
+## Render / migration notes
+This repository includes a Render Docker service, PostgreSQL-aware settings, versioned database migrations, and Ansible smoke checks. The service currently has an explicit temporary SQLite fallback for demo launch; before real customer use, attach durable PostgreSQL and persistent object storage. Profile photo uploads currently live on the service filesystem and can be lost after a restart/redeploy. The existing free PostgreSQL test database expires and must not be treated as permanent backup or production storage.
 
-The Blueprint is configured to link to the existing free database named `urbisora-africa-db`. Free databases have an expiry window and must not be assumed to be permanent production storage. If the Blueprint cannot adopt the existing database, resolve the name conflict in Render before syncing rather than creating a paid resource automatically.
+Normal realtor membership activation is automatic. Identity/licence verification is separate and must not be assumed unless the platform has actually verified it.
 
-Free Render containers have ephemeral local filesystems. Property image links can point at externally hosted images, but uploaded files stored locally will not be durable across restarts. Use persistent object storage for commercial production.
-
-## Local development
-
-```bash
+## Local run
 python -m venv .venv
 pip install -r requirements.txt
-python manage.py migrate --run-syncdb
+python manage.py migrate --fake-initial
 python manage.py runserver
-```
 
-Run application tests with `python manage.py test marketplace`. Post-deployment HTTP smoke checks are in `ansible/verify-deployment.yml`.
+## Checks
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test marketplace
