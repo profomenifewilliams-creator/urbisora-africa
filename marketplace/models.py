@@ -171,3 +171,24 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Contact message from {self.full_name}"
+
+
+class RealtorLead(models.Model):
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        CONTACTED = "contacted", "Contacted"
+        CLOSED = "closed", "Closed"
+
+    realtor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received_realtor_leads")
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40, blank=True)
+    message = models.TextField()
+    status = models.CharField(max_length=12, choices=Status.choices, default="new")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Realtor lead for {self.realtor} from {self.name}"
