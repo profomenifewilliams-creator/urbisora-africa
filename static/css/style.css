@@ -497,3 +497,14 @@ footer { background: radial-gradient(ellipse at 10% 0%,rgba(185,214,158,.07),tra
   .enquiry-status-form label {width:100%}
   .editor-actions .button {width:100%}
 }
+
+.cv-message-card {scroll-margin-top:105px}
+.cv-message-card h2 {font:400 25px Georgia,serif;margin:0 0 8px}
+.cv-message-card .muted {margin:0 0 16px}
+.cv-message-form {gap:11px}
+.cv-message-form label {font-size:10px}
+.cv-message-form input,.cv-message-form textarea {font-size:12px;padding:10px;border-radius:4px}
+.cv-message-form textarea {resize:vertical}
+.cv-message-form .button {margin-top:4px}
+.state-contacted {background:#e3edf8;color:#345d7d}
+.state-closed {background:#edf0eb;color:#667166}
