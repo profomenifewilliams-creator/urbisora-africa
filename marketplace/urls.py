@@ -16,6 +16,8 @@ urlpatterns = [
     path("profile/edit/", views.profile_edit, name="profile_edit"),
     path("realtors/", views.realtor_directory, name="realtors"),
     path("realtors/apply/", views.realtor_apply, name="realtor_apply"),
+    path("realtors/<str:username>/message/", views.realtor_lead_submit, name="realtor_lead_submit"),
     path("realtors/<str:username>/", views.realtor_profile, name="realtor_profile"),
+    path("realtor-leads/<int:lead_id>/update/", views.realtor_lead_update, name="realtor_lead_update"),
     path("contact/", views.contact, name="contact"),
 ]
