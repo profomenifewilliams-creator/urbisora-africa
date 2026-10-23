@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Property, Enquiry, ViewingRequest, SavedProperty, RealtorApplication, ContactMessage
+from .models import Profile, Property, Enquiry, ViewingRequest, SavedProperty, RealtorApplication, ContactMessage, RealtorLead
 
 
 @admin.register(Profile)
@@ -52,5 +52,14 @@ class ContactMessageAdmin(admin.ModelAdmin):
     list_display = ("full_name", "email", "phone", "status", "created_at")
     list_filter = ("status", "created_at")
     search_fields = ("full_name", "email", "phone", "message")
+    list_editable = ("status",)
+    readonly_fields = ("created_at",)
+
+
+@admin.register(RealtorLead)
+class RealtorLeadAdmin(admin.ModelAdmin):
+    list_display = ("realtor", "name", "email", "phone", "status", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("realtor__username", "realtor__email", "name", "email", "phone", "message")
     list_editable = ("status",)
     readonly_fields = ("created_at",)
