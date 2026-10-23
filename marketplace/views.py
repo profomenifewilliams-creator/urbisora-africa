@@ -7,9 +7,9 @@ from django.views.decorators.http import require_POST
 
 from .forms import (
     RegistrationForm, PropertyForm, EnquiryForm, RealtorApplicationForm,
-    ProfileForm, ContactMessageForm,
+    ProfileForm, ContactMessageForm, RealtorLeadForm,
 )
-from .models import Profile, Property, Enquiry, SavedProperty, RealtorApplication
+from .models import Profile, Property, Enquiry, SavedProperty, RealtorApplication, RealtorLead
 
 
 def home(request):
@@ -90,10 +90,13 @@ def dashboard(request):
     new_enquiries = Enquiry.objects.filter(property__owner=request.user, status=Enquiry.Status.NEW).count()
     profile_fields = [profile.photo, profile.bio, profile.phone, profile.city, profile.specialties, profile.service_areas]
     completeness = int(sum(bool(value) for value in profile_fields) / len(profile_fields) * 100)
+    realtor_leads = RealtorLead.objects.filter(realtor=request.user)[:20]
+    new_realtor_leads = RealtorLead.objects.filter(realtor=request.user, status=RealtorLead.Status.NEW).count()
     return render(request, "marketplace/dashboard.html", {
         "profile": profile, "mine": mine, "incoming": incoming, "saved": saved, "applications": applications,
         "approved_count": approved_count, "pending_count": pending_count, "new_enquiries": new_enquiries,
-        "profile_completeness": completeness,
+        "profile_completeness": completeness, "realtor_leads": realtor_leads,
+        "new_realtor_leads": new_realtor_leads,
     })
 
 
@@ -131,7 +134,7 @@ def realtor_profile(request, username):
     ).order_by("-created_at")
     return render(request, "marketplace/realtor_profile.html", {
         "profile": profile, "listings": listings,
-        "listing_count": listings.count(),
+        "listing_count": listings.count(), "lead_form": RealtorLeadForm(),
     })
 
 
@@ -260,3 +263,43 @@ def contact(request):
         "contact_address": "Guzape, FCT Abuja, Federal Housing Authority (FHA) Road, 219 House 15",
         "powered_by": "Fortitech Digital Cluster",
     })
+
+
+
+@require_POST
+def realtor_lead_submit(request, username):
+    profile = get_object_or_404(
+        Profile.objects.select_related("user"),
+        user__username=username,
+        role=Profile.Role.REALTOR,
+    )
+    if not profile.is_verified and not profile.user.realtor_applications.filter(status=RealtorApplication.Status.APPROVED).exists():
+        from django.http import Http404
+        raise Http404("Realtor profile not found")
+    if request.user.is_authenticated and request.user.pk == profile.user_id:
+        messages.info(request, "You cannot send an enquiry to your own realtor profile.")
+        return redirect("realtor_profile", username=username)
+    form = RealtorLeadForm(request.POST)
+    if form.is_valid():
+        lead = form.save(commit=False)
+        lead.realtor = profile.user
+        lead.save()
+        messages.success(request, "Your message has been sent to this realtor's Urbisora workspace.")
+    else:
+        messages.error(request, "Please check the message form and try again.")
+    return redirect("realtor_profile", username=username)
+
+
+@login_required
+@require_POST
+def realtor_lead_update(request, lead_id):
+    lead = get_object_or_404(RealtorLead, pk=lead_id, realtor=request.user)
+    status = request.POST.get("status")
+    valid_statuses = {choice[0] for choice in RealtorLead.Status.choices}
+    if status in valid_statuses:
+        lead.status = status
+        lead.save(update_fields=["status"])
+        messages.success(request, "Realtor lead status updated.")
+    else:
+        messages.error(request, "Choose a valid lead status.")
+    return redirect("dashboard")
