@@ -39,22 +39,18 @@
         validate_certs: true
     - name: Check realtor directory
       ansible.builtin.uri:
-        url: "{{ app_url | regex_replace('/+      ansible.builtin.debug:
-        msg: "Urbisora health, landing page, property search, realtor directory and contact page returned HTTP 200."
-, '') }}/realtors/"
+        url: "{{ app_url | regex_replace('/+$', '') }}/realtors/"
         method: GET
         return_content: false
         status_code: 200
         validate_certs: true
     - name: Check contact page
       ansible.builtin.uri:
-        url: "{{ app_url | regex_replace('/+      ansible.builtin.debug:
-        msg: "Urbisora health, landing page, and property search returned HTTP 200."
-, '') }}/contact/"
+        url: "{{ app_url | regex_replace('/+$', '') }}/contact/"
         method: GET
         return_content: false
         status_code: 200
         validate_certs: true
     - name: Report successful smoke tests
       ansible.builtin.debug:
-        msg: "Urbisora health, landing page, and property search returned HTTP 200."
+        msg: "Urbisora health, landing page, property search, realtor directory and contact page returned HTTP 200."
