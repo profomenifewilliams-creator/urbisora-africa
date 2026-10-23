@@ -87,7 +87,7 @@ class MarketplaceSmokeTests(TestCase):
         dashboard_response = self.client.get(reverse("dashboard"))
         self.assertEqual(dashboard_response.status_code, 200)
 
-    def test_realtor_application_is_pending_until_review(self):
+    def test_realtor_application_is_automatically_approved(self):
         user = User.objects.create_user(username="candidate", password="StrongPassword!2026")
         self.client.force_login(user)
         response = self.client.post(reverse("realtor_apply"), {
@@ -97,9 +97,9 @@ class MarketplaceSmokeTests(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         application = user.realtor_applications.get()
-        self.assertEqual(application.status, "pending")
+        self.assertEqual(application.status, "approved")
         self.assertEqual(user.profile.role, "realtor")
-        self.assertFalse(user.profile.is_verified)
+        self.assertFalse(user.profile.is_verified)  # membership approval is not identity verification
 
     def test_realtor_directory_renders(self):
         response = self.client.get(reverse("realtors"))
