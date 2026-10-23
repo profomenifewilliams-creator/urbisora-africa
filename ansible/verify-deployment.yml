@@ -1,0 +1,42 @@
+---
+- name: Verify Urbisora Africa deployment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    app_url: "{{ lookup('env', 'URBISORA_URL') | default('https://urbisora-africa.onrender.com', true) }}"
+  tasks:
+    - name: Check application health endpoint
+      ansible.builtin.uri:
+        url: "{{ app_url | regex_replace('/+$', '') }}/healthz/"
+        method: GET
+        return_content: true
+        status_code: 200
+        validate_certs: true
+      register: health
+      retries: 10
+      delay: 15
+      until: health.status == 200
+    - name: Confirm health payload belongs to Urbisora
+      ansible.builtin.assert:
+        that:
+          - health.json.status == "ok"
+          - health.json.service == "urbisora-africa"
+        fail_msg: "Health endpoint did not return the expected Urbisora JSON payload."
+    - name: Check public landing page
+      ansible.builtin.uri:
+        url: "{{ app_url | regex_replace('/+$', '') }}/"
+        method: GET
+        return_content: false
+        status_code: 200
+        validate_certs: true
+    - name: Check property search page
+      ansible.builtin.uri:
+        url: "{{ app_url | regex_replace('/+$', '') }}/properties/"
+        method: GET
+        return_content: false
+        status_code: 200
+        validate_certs: true
+    - name: Report successful smoke tests
+      ansible.builtin.debug:
+        msg: "Urbisora health, landing page, and property search returned HTTP 200."
