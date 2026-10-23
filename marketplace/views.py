@@ -34,8 +34,8 @@ def property_detail(request, slug):
         from django.http import Http404
         raise Http404("Property not found")
     form = EnquiryForm()
-    return render(request, "marketplace/property_detail.html", {"property": prop, "enquiry_form": form,
-        "is_saved": request.user.is_authenticated and SavedProperty.objects.filter(user=request.user, property=prop).exists()})
+    is_saved = request.user.is_authenticated and SavedProperty.objects.filter(user=request.user, property=prop).exists()
+    return render(request, "marketplace/property_detail.html", {"property": prop, "enquiry_form": form, "is_saved": is_saved})
 
 def register(request):
     if request.user.is_authenticated:
@@ -54,6 +54,7 @@ def register(request):
 
 @login_required
 def dashboard(request):
+    Profile.objects.get_or_create(user=request.user)
     mine = Property.objects.filter(owner=request.user)
     incoming = Enquiry.objects.filter(property__owner=request.user).select_related("property")[:10]
     saved = SavedProperty.objects.filter(user=request.user).select_related("property")[:8]
@@ -99,7 +100,9 @@ def toggle_saved(request, slug):
     return redirect("property_detail", slug=slug)
 
 def realtor_directory(request):
-    profiles = Profile.objects.filter(role=Profile.Role.REALTOR).select_related("user").order_by("-is_verified", "user__first_name")
+    profiles = Profile.objects.filter(role=Profile.Role.REALTOR).filter(
+        Q(is_verified=True) | Q(user__realtor_applications__status=RealtorApplication.Status.APPROVED)
+    ).select_related("user").distinct().order_by("-is_verified", "user__first_name")
     return render(request, "marketplace/realtors.html", {"profiles": profiles})
 
 @login_required
