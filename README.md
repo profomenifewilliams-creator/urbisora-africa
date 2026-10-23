@@ -6,18 +6,21 @@ Django-powered real-estate marketplace with immediate account registration, publ
 
 ## Render deployment
 
-The repository contains a Dockerfile and Render configuration. Registration does not require SMTP or email verification. Owner-authorised listings stay pending until a staff administrator approves them in Django admin.
+This repository includes a Dockerfile and Render Blueprint. Once Render is connected to this private GitHub repository, use **New → Blueprint** in Render and select this repository.
 
+- Registration is immediate; no SMTP or email activation is required.
 - Health endpoint: `/healthz/`
 - Admin: `/admin/`
 - Property directory: `/properties/`
 - Member dashboard: `/dashboard/`
+- Listings need owner/agent authorisation and staff approval before public publication.
+- The bootstrap command reads `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD`. The Blueprint generates the secret key and initial admin password; read the generated value from Render environment settings and store it privately.
 
-The bootstrap command reads `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD`. Set a strong unique password in Render's environment settings.
+## Initial free-tier limitations
 
-## Initial free-tier limitation
+The Blueprint is configured to link to the existing free database named `urbisora-africa-db`. Free databases have an expiry window and must not be assumed to be permanent production storage. If the Blueprint cannot adopt the existing database, resolve the name conflict in Render before syncing rather than creating a paid resource automatically.
 
-For a direct initial deployment, SQLite defaults to `/tmp/urbisora.sqlite3` until a persistent PostgreSQL connection is configured. Free Render local storage is ephemeral and may be lost after a restart or redeploy. Property imagery uses external image URLs in this initial build. Attach a durable database and persistent object storage before commercial use.
+Free Render containers have ephemeral local filesystems. Property image links can point at externally hosted images, but uploaded files stored locally will not be durable across restarts. Use persistent object storage for commercial production.
 
 ## Local development
 
