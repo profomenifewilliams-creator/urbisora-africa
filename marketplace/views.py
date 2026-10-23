@@ -112,10 +112,11 @@ def realtor_apply(request):
     if request.method == "POST" and form.is_valid():
         app = form.save(commit=False)
         app.user = request.user
+        app.status = RealtorApplication.Status.APPROVED
         app.save()
         profile.role = Profile.Role.REALTOR
         profile.years_experience = app.years_experience
         profile.save()
-        messages.success(request, "Your realtor application has been submitted for review.")
+        messages.success(request, "Your realtor membership is approved and active. Profile verification is separate.")
         return redirect("dashboard")
     return render(request, "marketplace/realtor_apply.html", {"form": form})
