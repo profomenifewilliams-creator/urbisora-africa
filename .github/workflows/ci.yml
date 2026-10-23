@@ -1,0 +1,32 @@
+name: Django CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ci-only-not-for-production
+      DEBUG: "True"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Compile Python
+        run: python -m compileall -q config marketplace manage.py
+      - name: Django system check
+        run: python manage.py check
+      - name: Create test database schema
+        run: python manage.py migrate --run-syncdb --noinput
+      - name: Run application tests
+        run: python manage.py test marketplace --verbosity 2
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
