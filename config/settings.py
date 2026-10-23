@@ -45,6 +45,8 @@ if DATABASE_URL.startswith(("postgres://", "postgresql://")):
         "PASSWORD": unquote(u.password or ""), "HOST": u.hostname or "", "PORT": u.port or 5432,
         "CONN_MAX_AGE": 60, "OPTIONS": {"sslmode": os.getenv("DB_SSLMODE", "require")}}}
 else:
+    if not DEBUG:
+        raise RuntimeError("Production requires DATABASE_URL linked to PostgreSQL; SQLite is permitted only for local development.")
     sqlite_path = os.getenv("SQLITE_PATH", str(BASE_DIR / "db.sqlite3"))
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": sqlite_path, "OPTIONS": {"timeout": 20}}}
 
