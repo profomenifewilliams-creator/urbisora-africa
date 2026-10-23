@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile, Property, Enquiry, RealtorApplication, ContactMessage
+from .models import Profile, Property, Enquiry, RealtorApplication, ContactMessage, RealtorLead
 
 User = get_user_model()
 
@@ -117,3 +117,10 @@ class ContactMessageForm(forms.ModelForm):
         model = ContactMessage
         fields = ("full_name", "email", "phone", "message")
         widgets = {"message": forms.Textarea(attrs={"rows": 5, "placeholder": "How can our team help?"})}
+
+
+class RealtorLeadForm(forms.ModelForm):
+    class Meta:
+        model = RealtorLead
+        fields = ("name", "email", "phone", "message")
+        widgets = {"message": forms.Textarea(attrs={"rows": 4, "placeholder": "Tell the realtor what you need help with…"})}
