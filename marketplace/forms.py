@@ -14,7 +14,7 @@ class RegistrationForm(UserCreationForm):
     role = forms.ChoiceField(choices=Profile.Role.choices)
     class Meta:
         model = User
-        fields = ("username", "first_name", "last_name", "email", "password1", "password2")
+        fields = ("username", "first_name", "last_name", "email", "phone", "city", "role", "password1", "password2")
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
