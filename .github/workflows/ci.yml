@@ -36,3 +36,7 @@ jobs:
         run: ansible-playbook -i localhost, --syntax-check ansible/verify-deployment.yml
       - name: Build production Docker image
         run: docker build --tag urbisora-africa:ci .
+      - name: Run public deployment smoke tests with Ansible
+        env:
+          URBISORA_URL: https://urbisora-africa.onrender.com
+        run: ansible-playbook -i localhost, ansible/verify-deployment.yml
