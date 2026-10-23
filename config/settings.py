@@ -4,7 +4,7 @@ from urllib.parse import urlparse, unquote
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "local-unsafe-key-change-in-render")
-DEBUG = os.getenv("DEBUG", "False").lower() in {"1", "true", "yes"}
+DEBUG = os.getenv("DEBUG", "True" if not os.getenv("RENDER") else "False").lower() in {"1", "true", "yes"}
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", ".onrender.com,localhost,127.0.0.1,testserver").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("CSRF_TRUSTED_ORIGINS", "https://*.onrender.com").split(",") if x.strip()]
 
@@ -46,7 +46,6 @@ else:
     sqlite_path = os.getenv("SQLITE_PATH", str(BASE_DIR / "db.sqlite3"))
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": sqlite_path, "OPTIONS": {"timeout": 20}}}
 
-# This initial deploy has no email dependency; registrations activate immediately.
 EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
 DEFAULT_FROM_EMAIL = "Urbisora Africa <no-reply@urbisora.local>"
 AUTH_PASSWORD_VALIDATORS = [
