@@ -1,0 +1,3 @@
+# Urbisora Africa launch readiness
+
+The Render deployment is not yet ready. The repository must contain the full Django application source (manage.py, config/, marketplace/, templates/, static/, requirements.txt, Dockerfile, and render.yaml) before deployment. A temporary source fragment is not deployable. Normal registration should not require SMTP. Apply migrations and test registration, property listing, enquiries, realtor screening, admin access, and persistent media storage after the source upload.
