@@ -95,3 +95,18 @@ class UrbisoraAgentTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("Urbisora Assistant", response.json()["reply"])
+
+    def test_agent_uses_current_property_page_context(self):
+        response = self.client.post(
+            reverse("ai_chat"),
+            data=json.dumps({
+                "message": "Tell me more about this property",
+                "history": [],
+                "page": reverse("property_detail", kwargs={"slug": self.property.slug}),
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("Agent Test Family Home", str(data))
+        self.assertIn("45,000,000", str(data))
