@@ -18,7 +18,7 @@ class UrbisoraAgentTests(TestCase):
         RealtorApplication.objects.create(user=self.owner, message="Approved realtor", status=RealtorApplication.Status.APPROVED)
         self.property = Property.objects.create(
             owner=self.owner, title="Agent Test Family Home", description="Three bedroom family home",
-            price=45000000, city="Abuja", state="FCT", bedrooms=3, owner_authorized=True,
+            property_type=Property.Type.HOUSE, price=45000000, city="Abuja", state="FCT", bedrooms=3, owner_authorized=True,
             review_status=Property.Review.APPROVED,
         )
 
