@@ -43,3 +43,7 @@ python manage.py runserver
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test marketplace
+
+
+## Urbisora AI Agent
+The site includes a built-in, database-grounded assistant for public property search, realtor discovery, navigation help, and confirmation-gated actions against the signed-in member's own workspace. It works without an external key in guided mode. For generative natural-language reasoning, configure `URBISORA_AI_API_KEY`, `URBISORA_AI_MODEL` (default `gpt-6-luna`), and optionally `URBISORA_AI_BASE_URL` in the Render service environment. The configured provider receives the user's chat message and recent conversation history; it does not receive full private account records. All state changes are implemented server-side with ownership checks and confirmation, not delegated to the model. Conversations are not written to the database.

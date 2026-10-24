@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, ai_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -20,4 +20,6 @@ urlpatterns = [
     path("realtors/<str:username>/", views.realtor_profile, name="realtor_profile"),
     path("realtor-leads/<int:lead_id>/update/", views.realtor_lead_update, name="realtor_lead_update"),
     path("contact/", views.contact, name="contact"),
+    path("ai/chat/", ai_views.chat, name="ai_chat"),
+    path("ai/action/", ai_views.action, name="ai_action"),
 ]

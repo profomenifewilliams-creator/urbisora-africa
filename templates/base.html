@@ -15,5 +15,20 @@
 {% if messages %}<div class="messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
 <main>{% block content %}{% endblock %}</main>
 <footer class="site-footer"><div class="footer-brand-block"><a class="brand brand-footer" href="{% url 'home' %}"><span class="brand-mark">U</span><span>URBISORA <small>AFRICA</small></span></a><p>Property. People. Places.</p><p class="footer-powered">Developed and powered by <strong>Fortitech Digital Cluster</strong>.</p></div><div class="footer-links"><a href="{% url 'property_list' %}">Explore properties</a><a href="{% url 'realtors' %}">Find a realtor</a><a href="{% url 'realtor_apply' %}">Join as a realtor</a><a href="{% url 'contact' %}">Contact us</a></div><div class="footer-contact"><span>CONTACT</span><a href="tel:+2349067912928">+234 906 791 2928</a><a href="mailto:admin@ubisoraafrica.com">admin@ubisoraafrica.com</a><p>Guzape, FCT Abuja, Federal Housing Authority (FHA) Road, 219 House 15</p></div><p class="copyright">© {% now "Y" %} Urbisora Africa. Property information is subject to independent verification.</p></footer>
+<div id="urbi-ai-csrf" hidden>{% csrf_token %}</div>
+<div id="urbi-ai-root" class="urbi-ai-root" data-chat-url="{% url 'ai_chat' %}" data-action-url="{% url 'ai_action' %}">
+  <button class="urbi-ai-toggle" data-ai-toggle type="button" aria-label="Open Urbisora AI assistant" aria-expanded="false" aria-controls="urbi-ai-panel">
+    <span class="urbi-ai-toggle-spark">✳</span><span class="urbi-ai-toggle-label">Ask Urbisora AI</span><span class="urbi-ai-unread-dot" aria-hidden="true"></span>
+  </button>
+  <section id="urbi-ai-panel" class="urbi-ai-panel" data-ai-panel aria-hidden="true" hidden aria-label="Urbisora AI assistant">
+    <header class="urbi-ai-header"><div class="urbi-ai-brand-mark">U</div><div class="urbi-ai-header-copy"><strong>Urbisora AI</strong><span>Real-estate platform assistant</span></div><span class="urbi-ai-live"><i></i> LIVE</span><button class="urbi-ai-close" type="button" data-ai-close aria-label="Close assistant">×</button></header>
+    <div class="urbi-ai-welcome"><span class="urbi-ai-eyebrow">PROPERTY. PEOPLE. PLACES.</span><h2>Your property copilot.</h2><p>Search current listings, discover realtor CVs and manage your Urbisora workspace with guided actions.</p></div>
+    <div class="urbi-ai-starters" data-ai-starters aria-label="Suggested questions"><button type="button" data-prompt="Find me houses for sale in Abuja">Find homes in Abuja ↗</button><button type="button" data-prompt="How do I become a realtor and complete my profile?">Become a realtor</button><button type="button" data-prompt="Help me manage my listings and enquiries">Manage my workspace</button></div>
+    <div class="urbi-ai-transcript" data-ai-transcript aria-live="polite" aria-relevant="additions text"><article class="urbi-ai-message urbi-ai-assistant"><span class="urbi-ai-message-label">URBISORA AI</span><div class="urbi-ai-message-body">Hello! I can help you explore approved property listings, find realtor profiles, improve your professional CV, manage your own listings and follow up with leads. What would you like to do?</div><span class="urbi-ai-mode">Platform tools</span></article></div>
+    <form class="urbi-ai-form" data-ai-form><label class="urbi-ai-input-label" for="urbi-ai-input">Message Urbisora AI</label><textarea id="urbi-ai-input" data-ai-input rows="2" maxlength="2000" placeholder="Search a property or ask for help…" required></textarea><div class="urbi-ai-form-bottom"><span>Never share passwords or OTPs.</span><button type="submit" data-ai-send aria-label="Send message">Send <span>↗</span></button></div></form>
+    <footer class="urbi-ai-footer"><span data-ai-status>Live platform tools</span><span>Powered by Fortitech Digital Cluster</span></footer>
+  </section>
+</div>
 <script src="{% static 'js/main.js' %}" defer></script>
+<script src="{% static 'js/ai-agent.js' %}" defer></script>
 </body></html>
