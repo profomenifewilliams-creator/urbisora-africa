@@ -116,6 +116,101 @@ def _match_property_title(title, queryset):
     return None
 
 
+
+def _current_page_reply(message, user, page):
+    """Use the page the visitor is on as a safe hint, rechecking visibility server-side."""
+    path = re.sub(r"/+", "/", (page or "")[:240])
+    lower = message.lower()
+    if not path.startswith("/") or path.startswith("//"):
+        return None
+
+    prop_match = re.fullmatch(r"/properties/([a-zA-Z0-9_-]+)/", path)
+    if prop_match and prop_match.group(1) not in {"new"}:
+        prop = Property.objects.filter(slug=prop_match.group(1)).select_related("owner", "owner__profile").first()
+        if prop:
+            allowed = (
+                (prop.review_status == Property.Review.APPROVED and not prop.is_archived)
+                or (user.is_authenticated and (user.pk == prop.owner_id or user.is_staff))
+            )
+            if allowed and any(word in lower for word in (
+                "this property", "this listing", "this home", "tell me more", "more about this",
+                "details", "who listed", "who is the realtor", "price of this", "summarise this",
+                "summarize this", "explain this",
+            )):
+                owner_profile = getattr(prop.owner, "profile", None)
+                is_realtor = bool(owner_profile and owner_profile.role == Profile.Role.REALTOR)
+                contact_links = [_link("Open listing", "property_detail", slug=prop.slug)]
+                if is_realtor and owner_profile.user.realtor_applications.filter(status=RealtorApplication.Status.APPROVED).exists():
+                    contact_links.append(_link("View realtor CV", "realtor_profile", username=prop.owner.username))
+                detail_text = (
+                    f"Here are the details currently recorded for “{prop.title}”: ₦{prop.price:,.0f}, "
+                    f"{prop.get_purpose_display().lower()}, {prop.get_property_type_display().lower()}, "
+                    f"{prop.city}, {prop.state}; {prop.bedrooms} bedroom(s), {prop.bathrooms} bathroom(s). "
+                    f"{prop.description[:500]} "
+                    "Confirm availability, exact terms, ownership and documents directly before paying."
+                )
+                return {
+                    "reply": detail_text, "links": [link for link in contact_links if link],
+                    "cards": [_property_card(prop)], "mode": "guided",
+                }
+
+    realtor_match = re.fullmatch(r"/realtors/([a-zA-Z0-9_.-]+)/", path)
+    if realtor_match and realtor_match.group(1) not in {"apply"}:
+        profile = Profile.objects.filter(
+            user__username=realtor_match.group(1), role=Profile.Role.REALTOR
+        ).select_related("user").first()
+        if profile and (
+            profile.is_verified or profile.user.realtor_applications.filter(status=RealtorApplication.Status.APPROVED).exists()
+        ) and any(word in lower for word in (
+            "this realtor", "this agent", "their profile", "their properties",
+            "tell me more", "more about", "experience", "specialties", "speciality",
+            "contact this", "summarise", "summarize",
+        )):
+            live = Property.objects.filter(
+                owner=profile.user, review_status=Property.Review.APPROVED, is_archived=False
+            )
+            facts = [
+                profile.bio or "No professional summary has been added yet.",
+                f"Professional title: {profile.professional_title}.",
+                f"Location: {profile.city or 'not specified'}.",
+                f"Years of experience recorded: {profile.years_experience}.",
+                f"Specialties: {profile.specialties or 'not specified'}.",
+                f"Service areas: {profile.service_areas or 'not specified'}.",
+                f"Approved public listings: {live.count()}.",
+                "Credential verification is separate from realtor membership.",
+            ]
+            return {
+                "reply": "Here is the public information on this realtor:\n" + "\n".join(facts),
+                "links": [_link("View full CV and portfolio", "realtor_profile", username=profile.user.username),
+                          _link("Browse realtor directory", "realtors")],
+                "cards": [_realtor_card(profile)], "mode": "guided",
+            }
+
+    if path == "/dashboard/" and user.is_authenticated and any(w in lower for w in (
+        "what next", "what should i do", "help me here", "what can i do", "next step", "overview",
+    )):
+        own = Property.objects.filter(owner=user)
+        pending = own.filter(review_status=Property.Review.PENDING).count()
+        live = own.filter(review_status=Property.Review.APPROVED, is_archived=False).count()
+        profile, _ = Profile.objects.get_or_create(user=user)
+        if profile.role == Profile.Role.REALTOR:
+            suggestions = []
+            if not profile.photo or not profile.bio or not profile.service_areas:
+                suggestions.append("complete your CV photo, biography and service areas")
+            if not own.exists():
+                suggestions.append("add your first authorised property listing")
+            if pending:
+                suggestions.append(f"check {pending} listing(s) awaiting moderation")
+            if not suggestions:
+                suggestions.append("review your new enquiries and realtor leads, then keep listing details current")
+            reply = "Your realtor workspace overview: " + f"{live} live listing(s), {pending} awaiting review. " + "A useful next step is to " + "; ".join(suggestions) + "."
+        else:
+            reply = "Your workspace helps you manage saved properties and any listings you've submitted. You can activate realtor membership if you'd like to build a professional CV and manage a realtor portfolio."
+        return {"reply": reply, "links": _links("dashboard", "profile", "add_property", "apply", "properties"), "cards": [], "mode": "guided"}
+
+    return None
+
+
 def _local_intent(message, user):
     """Execute read-only tools locally; return suggested writes for explicit confirmation."""
     text = message.strip()
@@ -398,8 +493,11 @@ def _provider_reply(message, history):
         return None
 
 
-def get_agent_reply(message, history, user):
+def get_agent_reply(message, history, user, page=""):
     """Combine deterministic platform tools with optional generative reasoning."""
+    page_result = _current_page_reply(message, user, page)
+    if page_result is not None:
+        return page_result
     local = _local_intent(message, user)
     if local is not None:
         return local

@@ -191,7 +191,7 @@
         method: "POST",
         credentials: "same-origin",
         headers: {"Content-Type": "application/json", "X-CSRFToken": csrfInput ? csrfInput.value : ""},
-        body: JSON.stringify({message: clean, history: history.slice(-8), page: window.location.pathname})
+        body: JSON.stringify({message: clean, history: history.slice(0, -1).slice(-8), page: window.location.pathname})
       });
       const data = await response.json();
       pending.remove();

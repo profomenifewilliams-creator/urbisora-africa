@@ -42,6 +42,9 @@ def chat(request):
     message = message.strip()
     if not message or len(message) > 2000:
         return JsonResponse({"error": "Enter a message between 1 and 2000 characters."}, status=400)
+    page = data.get("page", "")
+    if not isinstance(page, str) or not page.startswith("/") or page.startswith("//"):
+        page = ""
     history = data.get("history", [])
     if not isinstance(history, list):
         history = []
@@ -50,7 +53,7 @@ def chat(request):
     for item in history[-8:]:
         if isinstance(item, dict) and item.get("role") in ("user", "assistant") and isinstance(item.get("content"), str):
             cleaned_history.append({"role": item["role"], "content": item["content"][:1200]})
-    result = get_agent_reply(message, cleaned_history, request.user)
+    result = get_agent_reply(message, cleaned_history, request.user, page=page[:240])
     return JsonResponse(result)
 
 
